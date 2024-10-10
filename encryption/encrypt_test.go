@@ -50,4 +50,3 @@ func TestEncryptDecryptBytes(t *testing.T) {
 		return
 	}
 }
-

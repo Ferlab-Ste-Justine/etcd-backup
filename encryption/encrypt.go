@@ -1,9 +1,9 @@
 package encryption
 
-import(
+import (
 	"bytes"
-	"io"
 	chacha "golang.org/x/crypto/chacha20poly1305"
+	"io"
 )
 
 func encryptWithNonce(plaintext []byte, encrKey []byte, nonce []byte) ([]byte, error) {
@@ -27,7 +27,7 @@ func EncryptBytes(plaintext []byte, encrKey []byte) ([]byte, error) {
 	return encryptWithNonce(plaintext, encrKey, nonce)
 }
 
-func DecryptBytes(encryptedMsg []byte, decKey []byte) ([]byte, error) {	
+func DecryptBytes(encryptedMsg []byte, decKey []byte) ([]byte, error) {
 	aead, err := chacha.NewX(decKey)
 	if err != nil {
 		return nil, err
@@ -39,12 +39,12 @@ func DecryptBytes(encryptedMsg []byte, decKey []byte) ([]byte, error) {
 }
 
 type EncryptStream struct {
-	ChunkSize int64
-	MasterKey []byte
-	CipherKey []byte
-	Nonce NonceInc
-	Source io.Reader
-	SourceErr error
+	ChunkSize    int64
+	MasterKey    []byte
+	CipherKey    []byte
+	Nonce        NonceInc
+	Source       io.Reader
+	SourceErr    error
 	SourceBuffer *bytes.Buffer
 }
 
@@ -58,14 +58,14 @@ func NewEncryptStream(masterKey []byte, source io.Reader, chunkSize int64) (*Enc
 	if cipherKeyErr != nil {
 		return nil, cipherKeyErr
 	}
-	
+
 	return &EncryptStream{
-		MasterKey: masterKey,
-		ChunkSize: chunkSize,
-		Source: source,
-		Nonce: nonce,
-		CipherKey: cipherKey,
-		SourceErr: nil,
+		MasterKey:    masterKey,
+		ChunkSize:    chunkSize,
+		Source:       source,
+		Nonce:        nonce,
+		CipherKey:    cipherKey,
+		SourceErr:    nil,
 		SourceBuffer: bytes.NewBuffer(make([]byte, 0)),
 	}, nil
 }
@@ -123,11 +123,11 @@ func (stream *EncryptStream) GetEncryptedCipherKey() ([]byte, error) {
 }
 
 type DecryptStream struct {
-	ChunkSize int64
-	MasterKey []byte
-	CipherKey []byte
-	Source io.Reader
-	SourceErr error
+	ChunkSize    int64
+	MasterKey    []byte
+	CipherKey    []byte
+	Source       io.Reader
+	SourceErr    error
 	SourceBuffer *bytes.Buffer
 }
 
@@ -136,13 +136,13 @@ func NewDecryptStream(masterKey []byte, encrCipherKey []byte, source io.Reader, 
 	if cipherKeyErr != nil {
 		return nil, cipherKeyErr
 	}
-	
+
 	return &DecryptStream{
-		MasterKey: masterKey,
-		ChunkSize: chunkSize,
-		Source: source,
-		CipherKey: cipherKey,
-		SourceErr: nil,
+		MasterKey:    masterKey,
+		ChunkSize:    chunkSize,
+		Source:       source,
+		CipherKey:    cipherKey,
+		SourceErr:    nil,
 		SourceBuffer: bytes.NewBuffer(make([]byte, 0)),
 	}, nil
 }
@@ -158,7 +158,7 @@ func (stream *DecryptStream) AddPlaintext() {
 		return
 	}
 
-	srcInput := make([]byte, int(stream.ChunkSize) + aead.NonceSize() + aead.Overhead())
+	srcInput := make([]byte, int(stream.ChunkSize)+aead.NonceSize()+aead.Overhead())
 	n, nErr := stream.Source.Read(srcInput)
 	if nErr != nil {
 		stream.SourceErr = nErr

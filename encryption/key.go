@@ -1,6 +1,6 @@
 package encryption
 
-import(
+import (
 	"crypto/rand"
 )
 

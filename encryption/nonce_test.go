@@ -2,14 +2,14 @@ package encryption
 
 import (
 	"bytes"
-    "encoding/binary"
+	"encoding/binary"
 	"testing"
 
-    chacha "golang.org/x/crypto/chacha20poly1305"
+	chacha "golang.org/x/crypto/chacha20poly1305"
 )
 
 func TestNewNonce(t *testing.T) {
-    nonce1, nonce1Err := NewNonce()
+	nonce1, nonce1Err := NewNonce()
 	if nonce1Err != nil {
 		t.Errorf("Error occured creating first nonce: %s", nonce1Err.Error())
 		return
@@ -20,7 +20,7 @@ func TestNewNonce(t *testing.T) {
 		return
 	}
 
-    nonce2, nonce2Err := NewNonce()
+	nonce2, nonce2Err := NewNonce()
 	if nonce2Err != nil {
 		t.Errorf("Error occured creating second nonce: %s", nonce2Err.Error())
 		return
@@ -38,7 +38,7 @@ func TestNewNonce(t *testing.T) {
 }
 
 func TestNewNonceIncNew(t *testing.T) {
-    nonce1, nonce1Err := NewNonceInc()
+	nonce1, nonce1Err := NewNonceInc()
 	if nonce1Err != nil {
 		t.Errorf("Error occured creating first nonce: %s", nonce1Err.Error())
 		return
@@ -49,7 +49,7 @@ func TestNewNonceIncNew(t *testing.T) {
 		return
 	}
 
-    nonce2, nonce2Err := NewNonceInc()
+	nonce2, nonce2Err := NewNonceInc()
 	if nonce2Err != nil {
 		t.Errorf("Error occured creating second nonce: %s", nonce2Err.Error())
 		return
@@ -72,13 +72,13 @@ func TestNewNonceIncNew(t *testing.T) {
 }
 
 func TestNewNonceIncNext(t *testing.T) {
-    nonce, nonceErr := NewNonceInc()
+	nonce, nonceErr := NewNonceInc()
 	if nonceErr != nil {
 		t.Errorf("Error occured creating nonce: %s", nonceErr.Error())
 		return
 	}
 
-    nonceNext1 := nonce.Next()
+	nonceNext1 := nonce.Next()
 	if len(nonceNext1) != chacha.NonceSizeX {
 		t.Errorf("Expected incremented nonce to %d bytes and it was %d bytes", chacha.NonceSizeX, len(nonceNext1))
 		return
@@ -89,18 +89,18 @@ func TestNewNonceIncNext(t *testing.T) {
 		return
 	}
 
-	if !bytes.Equal(nonce.Base[8:], nonceNext1[8:(chacha.NonceSizeX - 8)]) {
+	if !bytes.Equal(nonce.Base[8:], nonceNext1[8:(chacha.NonceSizeX-8)]) {
 		t.Errorf("Expected next part of nonce to be the same random part. It wasn't")
 		return
 	}
 
-    increment := binary.BigEndian.Uint64(nonceNext1[(chacha.NonceSizeX - 8):])
-    if increment != 0 {
+	increment := binary.BigEndian.Uint64(nonceNext1[(chacha.NonceSizeX - 8):])
+	if increment != 0 {
 		t.Errorf("Expected the increment part to be 0. It was %d", increment)
 		return
-    }
+	}
 
-    nonceNext2 := nonce.Next()
+	nonceNext2 := nonce.Next()
 	if len(nonceNext2) != chacha.NonceSizeX {
 		t.Errorf("Expected twice incremented nonce to %d bytes and it was %d bytes", chacha.NonceSizeX, len(nonceNext2))
 		return
@@ -111,14 +111,14 @@ func TestNewNonceIncNext(t *testing.T) {
 		return
 	}
 
-	if !bytes.Equal(nonce.Base[8:], nonceNext2[8:(chacha.NonceSizeX - 8)]) {
+	if !bytes.Equal(nonce.Base[8:], nonceNext2[8:(chacha.NonceSizeX-8)]) {
 		t.Errorf("Expected next part of twice incremented nonce to be the same random part. It wasn't")
 		return
 	}
 
-    increment = binary.BigEndian.Uint64(nonceNext2[(chacha.NonceSizeX - 8):])
-    if increment != 1 {
+	increment = binary.BigEndian.Uint64(nonceNext2[(chacha.NonceSizeX - 8):])
+	if increment != 1 {
 		t.Errorf("Expected the increment after second increment part to be 1. It was %d", increment)
 		return
-    }
+	}
 }
