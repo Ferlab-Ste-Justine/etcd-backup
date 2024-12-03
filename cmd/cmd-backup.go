@@ -3,12 +3,12 @@ package cmd
 import (
 	"context"
 	"encoding/hex"
-	"io"
 	"os"
 	"time"
 
 	"github.com/Ferlab-Ste-Justine/etcd-backup/config"
 	"github.com/Ferlab-Ste-Justine/etcd-backup/encryption"
+	"github.com/Ferlab-Ste-Justine/etcd-backup/s3"
 
 	"github.com/Ferlab-Ste-Justine/etcd-sdk/client"
 	"github.com/spf13/cobra"
@@ -39,41 +39,35 @@ func generateBackupCmd(confPath *string) *cobra.Command {
 			snapshotErr := cli.Snapshot(true, conf.SnapshotPath, duration)
 			AbortOnErr(snapshotErr)
 
-			masterKeyHex, readErr := os.ReadFile(conf.EncryptionKeyPath)
-			AbortOnErr(readErr)
-
-			masterKey := make([]byte, hex.DecodedLen(len(masterKeyHex)))
-			_, convErr := hex.Decode(masterKey, masterKeyHex)
-			AbortOnErr(convErr)
-
 			backupFileHandle, openErr := os.Open(conf.SnapshotPath)
 			AbortOnErr(openErr)
 
-			encrStream, encStreamErr := encryption.NewEncryptStream(masterKey, backupFileHandle, 1024*1024)
-			AbortOnErr(encStreamErr)
+			if conf.EncryptionKeyPath != "" {
+				masterKeyHex, readErr := os.ReadFile(conf.EncryptionKeyPath)
+				AbortOnErr(readErr)
+	
+				masterKey := make([]byte, hex.DecodedLen(len(masterKeyHex)))
+				_, convErr := hex.Decode(masterKey, masterKeyHex)
+				AbortOnErr(convErr)
+	
+				encrStream, encStreamErr := encryption.NewEncryptStream(masterKey, backupFileHandle, 1024*1024)
+				AbortOnErr(encStreamErr)
+	
+				encCiph, encCiphErr := encrStream.GetEncryptedCipherKey()
+				AbortOnErr(encCiphErr)
 
-			encCiph, encCiphErr := encrStream.GetEncryptedCipherKey()
-			AbortOnErr(encCiphErr)
+				backupErr := s3.Backup(encrStream, conf.S3Client, encCiph)
+				AbortOnErr(backupErr)
 
-			//Should be to minio, but writing to file for now to validate
-			dest, fileCrErr := os.Create("snapshots/backup.enc")
-			AbortOnErr(fileCrErr)
+				AbortOnErr(os.Remove(conf.SnapshotPath))
 
-			_, copyErr := io.Copy(dest, encrStream)
-			AbortOnErr(copyErr)
+				return
+			}
 
-			//Just to validating decryption
-			encBackupFileHandle, encOpenErr := os.Open("snapshots/backup.enc")
-			AbortOnErr(encOpenErr)
+			backupErr := s3.Backup(backupFileHandle, conf.S3Client, []byte{})
+			AbortOnErr(backupErr)
 
-			decrStream, decrStreamErr := encryption.NewDecryptStream(masterKey, encCiph, encBackupFileHandle, 1024*1024)
-			AbortOnErr(decrStreamErr)
-
-			dest, fileCrErr = os.Create("snapshots/backup.dec")
-			AbortOnErr(fileCrErr)
-
-			_, copyErr = io.Copy(dest, decrStream)
-			AbortOnErr(copyErr)
+			AbortOnErr(os.Remove(conf.SnapshotPath))
 		},
 	}
 

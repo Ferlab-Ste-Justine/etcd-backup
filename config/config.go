@@ -35,21 +35,16 @@ type EtcdClientConfig struct {
 	Auth              EtcdClientAuthConfig
 }
 
-type ServerConfig struct {
-	Port             int64
-	BindIp           string        `yaml:"bind_ip"`
-	MaxConnections   uint32        `yaml:"max_connections"`
-	KeepAliveTime    time.Duration `yaml:"keep_alive_time"`
-	KeepAliveTimeout time.Duration `yaml:"keep_alive_timeout"`
-	KeepAliveMinTime time.Duration `yaml:"keep_alive_min_time"`
-}
-
 type S3ClientConfig struct {
-	Endpoint  string
-	Bucket    string
-	AccessKey string `yaml:"access_key"`
-	SecretKey string `yaml:"secret_key"`
-	Region    string
+	ObjectsPrefix     string        `yaml:"objects_prefix"`
+	Endpoint          string
+	Bucket            string
+	AccessKey         string        `yaml:"access_key"`
+	SecretKey         string        `yaml:"secret_key"`
+	Region            string
+	ConnectionTimeout time.Duration `yaml:"connection_timeout"`
+	RequestTimeout    time.Duration `yaml:"request_timeout"`
+	CaCert            string        `yaml:"ca_cert"`
 }
 
 type Config struct {
@@ -110,6 +105,10 @@ func GetConfig(path string) (Config, error) {
 		}
 		c.EtcdClient.Auth.Username = pAuth.Username
 		c.EtcdClient.Auth.Password = pAuth.Password
+	}
+
+	if c.S3Client.ObjectsPrefix == "" {
+		c.S3Client.ObjectsPrefix = "backup"
 	}
 
 	return c, nil
