@@ -3,6 +3,7 @@ package s3
 import (
 	"context"
 	"errors"
+    "slices"
 	"time"
 
 	minio "github.com/minio/minio-go/v7"
@@ -17,6 +18,58 @@ type BackupEntry struct {
 type BackupEntries struct {
 	Entries map[time.Time]BackupEntry
 	LastEntry *BackupEntry
+}
+
+func (entries *BackupEntries) countValidBackups() int64 {
+    count := 0
+
+    for _, entry := range entries.Entries {
+        if entry.DumpFound {
+            count += 1
+        }
+    }
+
+    return int64(count)
+}
+
+func (entries *BackupEntries) GetDeletable(cutoff time.Time, minCount int64) []BackupEntry {
+    count := entries.countValidBackups()
+    if count <= minCount {
+        return []BackupEntry{}
+    }
+
+    toDeleteInc := []BackupEntry{}
+    toDelete := []BackupEntry{}
+
+	for _, entry := range entries.Entries {
+        if entry.Timestamp.Equal(cutoff) || entry.Timestamp.Before(cutoff) {
+            if !entry.DumpFound {
+                toDeleteInc = append(toDeleteInc, entry)
+                continue
+            }
+
+            toDelete = append(toDelete, entry)
+        }
+	}
+
+    if (count - int64(len(toDelete))) < minCount {
+        slices.SortFunc(toDelete, func(a, b BackupEntry) int {
+            if a.Timestamp.Equal(b.Timestamp) {
+                return 0
+            }
+
+            if a.Timestamp.After(b.Timestamp) {
+                return 1
+            }
+
+            return -1
+        })
+
+        toRecup := int64(len(toDelete)) - (count - minCount)
+        toDelete = toDelete[:int64(len(toDelete))-toRecup]
+    }
+
+    return append(toDelete, toDeleteInc...)
 }
 
 func (entries *BackupEntries) findEntry(timestamp time.Time) (BackupEntry, error) {
