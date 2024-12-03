@@ -33,7 +33,7 @@ func NewNamingConvention(prefix string) NamingConvention {
 		dumpRegex: regexp.MustCompile(fmt.Sprintf("^%s-(?P<timestamp>\\d+-\\d+-\\d+T\\d+:\\d+:\\d+Z)\\.dump$", prefix)),
 		keyRegex: regexp.MustCompile(fmt.Sprintf("^%s-(?P<timestamp>\\d+-\\d+-\\d+T\\d+:\\d+:\\d+Z)\\.key$", prefix)),
 		dumpTemplate: fmt.Sprintf("%s-%%s.dump", prefix),
-		keyTemplate: fmt.Sprintf("%s-%%s.dump", prefix),
+		keyTemplate: fmt.Sprintf("%s-%%s.key", prefix),
 	}
 }
 
