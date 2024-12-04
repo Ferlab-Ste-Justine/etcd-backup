@@ -30,12 +30,12 @@ func generateRestoreCmd(confPath *string) *cobra.Command {
 				_, convErr := hex.Decode(masterKey, masterKeyHex)
 				AbortOnErr(convErr)
 			
-				reader, key, restoreErr := s3.Restore(conf.S3Client, backupTimestamp)
+				reader, keyCypher, restoreErr := s3.Restore(conf.S3Client, backupTimestamp)
 				AbortOnErr(restoreErr)
 
 				decryptStr, decryptStrErr := encryption.NewDecryptStream(
 					masterKey,
-					key,
+					keyCypher,
 					reader,
 					1024*1024,
 				)

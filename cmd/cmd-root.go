@@ -18,7 +18,7 @@ func generateRootCmd() *cobra.Command {
 	rootCmd.AddCommand(generateBackupCmd(&confPath))
 	rootCmd.AddCommand(generateRestoreCmd(&confPath))
 	rootCmd.AddCommand(generatePruneCmd(&confPath))
-	rootCmd.AddCommand(generateRotateMasterKeyCmd(&confPath))
+	rootCmd.AddCommand(generateRotateKeyCmd(&confPath))
 
 	return rootCmd
 }
