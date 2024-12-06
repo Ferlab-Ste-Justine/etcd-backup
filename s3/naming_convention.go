@@ -30,15 +30,15 @@ type NamingConvention struct {
 func NewNamingConvention(prefix string) NamingConvention {
 	return NamingConvention{
 		Prefix: prefix,
-		dumpRegex: regexp.MustCompile(fmt.Sprintf("^%s-(?P<timestamp>\\d+-\\d+-\\d+T\\d+:\\d+:\\d+Z)\\.dump$", prefix)),
-		keyRegex: regexp.MustCompile(fmt.Sprintf("^%s-(?P<timestamp>\\d+-\\d+-\\d+T\\d+:\\d+:\\d+Z)\\.key$", prefix)),
+		dumpRegex: regexp.MustCompile(fmt.Sprintf("^%s-(?P<timestamp>\\d+-\\d+-\\d+T\\d+:\\d+:\\d+(Z|-(\\d+:\\d+)))\\.dump$", prefix)),
+		keyRegex: regexp.MustCompile(fmt.Sprintf("^%s-(?P<timestamp>\\d+-\\d+-\\d+T\\d+:\\d+:\\d+(Z|-(\\d+:\\d+)))\\.key$", prefix)),
 		dumpTemplate: fmt.Sprintf("%s-%%s.dump", prefix),
 		keyTemplate: fmt.Sprintf("%s-%%s.key", prefix),
 	}
 }
 
 func (conv *NamingConvention) GetObjectNames(timestamp time.Time) (string, string) {
-	timeStr := timestamp.Format(time.RFC3339)
+	timeStr := timestamp.UTC().Format(time.RFC3339)
 
 	return fmt.Sprintf(conv.dumpTemplate, timeStr),
 		fmt.Sprintf(conv.keyTemplate, timeStr)

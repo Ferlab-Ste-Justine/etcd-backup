@@ -83,12 +83,12 @@ func GetKeyAuth(path string) (S3KeyAuth, error) {
 
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
-		return a, errors.New(fmt.Sprintf("Error reading the key auth file: %s", err.Error()))
+		return a, errors.New(fmt.Sprintf("Error reading the s3 key auth file at path '%s': %s", path, err.Error()))
 	}
 
 	err = yaml.Unmarshal(b, &a)
 	if err != nil {
-		return a, errors.New(fmt.Sprintf("Error parsing the key auth file: %s", err.Error()))
+		return a, errors.New(fmt.Sprintf("Error parsing the s3 key auth file: %s", err.Error()))
 	}
 
 	return a, nil
@@ -99,12 +99,12 @@ func GetPasswordAuth(path string) (EtcdPasswordAuth, error) {
 
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
-		return a, errors.New(fmt.Sprintf("Error reading the password auth file: %s", err.Error()))
+		return a, errors.New(fmt.Sprintf("Error reading the etcd password auth file at path '%s': %s", path, err.Error()))
 	}
 
 	err = yaml.Unmarshal(b, &a)
 	if err != nil {
-		return a, errors.New(fmt.Sprintf("Error parsing the password auth file: %s", err.Error()))
+		return a, errors.New(fmt.Sprintf("Error parsing the etcd password auth file: %s", err.Error()))
 	}
 
 	return a, nil
