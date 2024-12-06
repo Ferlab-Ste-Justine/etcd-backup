@@ -54,5 +54,7 @@ func generateRotateKeyCmd(confPath *string) *cobra.Command {
 		},
 	}
 
+	rotateKeyCmd.Flags().StringVarP(&prevKeyPath, "previous-key", "p", "", "Path to the previous master key currently encrypting the backup keys")
+
 	return rotateKeyCmd
 }
