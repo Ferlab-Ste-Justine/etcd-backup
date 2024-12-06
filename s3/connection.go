@@ -20,8 +20,8 @@ func getTlsConfigs(s3Conf config.S3ClientConfig) (*tls.Config, error) {
 	}
 
 	//CA cert
-	if s3Conf.CaCert != "" {
-		caCertContent, err := ioutil.ReadFile(s3Conf.CaCert)
+	if s3Conf.Auth.CaCert != "" {
+		caCertContent, err := ioutil.ReadFile(s3Conf.Auth.CaCert)
 		if err != nil {
 			return nil, errors.New(fmt.Sprintf("Failed to read root certificate file: %s", err.Error()))
 		}
@@ -43,7 +43,7 @@ func connect(s3Conf config.S3ClientConfig) (*minio.Client, error) {
 	}
 
 	return minio.New(s3Conf.Endpoint, &minio.Options{
-		Creds:  credentials.NewStaticV4(s3Conf.AccessKey, s3Conf.SecretKey, ""),
+		Creds:  credentials.NewStaticV4(s3Conf.Auth.AccessKey, s3Conf.Auth.SecretKey, ""),
 		Secure: true,
 		Region: s3Conf.Region,
 		Transport: &http.Transport{

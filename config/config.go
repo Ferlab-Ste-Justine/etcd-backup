@@ -27,7 +27,6 @@ type EtcdClientAuthConfig struct {
 }
 
 type EtcdClientConfig struct {
-	Prefix            string
 	Endpoints         []string
 	ConnectionTimeout time.Duration `yaml:"connection_timeout"`
 	RequestTimeout    time.Duration `yaml:"request_timeout"`
@@ -35,16 +34,26 @@ type EtcdClientConfig struct {
 	Auth              EtcdClientAuthConfig
 }
 
+type S3KeyAuth struct {
+	AccessKey string `yaml:"access_key"`
+	SecretKey string `yaml:"secret_key"`
+}
+
+type S3AuthConfig struct {
+	CaCert    string `yaml:"ca_cert"`
+	KeyAuth   string `yaml:"key_auth"`
+	AccessKey string `yaml:"-"`
+	SecretKey string `yaml:"-"`
+}
+
 type S3ClientConfig struct {
 	ObjectsPrefix     string        `yaml:"objects_prefix"`
 	Endpoint          string
 	Bucket            string
-	AccessKey         string        `yaml:"access_key"`
-	SecretKey         string        `yaml:"secret_key"`
 	Region            string
+	Auth              S3AuthConfig
 	ConnectionTimeout time.Duration `yaml:"connection_timeout"`
 	RequestTimeout    time.Duration `yaml:"request_timeout"`
-	CaCert            string        `yaml:"ca_cert"`
 }
 
 type Config struct {
@@ -67,6 +76,22 @@ func (c *Config) GetLogLevel() int64 {
 	default:
 		return logger.INFO
 	}
+}
+
+func GetKeyAuth(path string) (S3KeyAuth, error) {
+	var a S3KeyAuth
+
+	b, err := ioutil.ReadFile(path)
+	if err != nil {
+		return a, errors.New(fmt.Sprintf("Error reading the key auth file: %s", err.Error()))
+	}
+
+	err = yaml.Unmarshal(b, &a)
+	if err != nil {
+		return a, errors.New(fmt.Sprintf("Error parsing the key auth file: %s", err.Error()))
+	}
+
+	return a, nil
 }
 
 func GetPasswordAuth(path string) (EtcdPasswordAuth, error) {
@@ -106,6 +131,13 @@ func GetConfig(path string) (Config, error) {
 		c.EtcdClient.Auth.Username = pAuth.Username
 		c.EtcdClient.Auth.Password = pAuth.Password
 	}
+
+	kAuth, kAuthErr := GetKeyAuth(c.S3Client.Auth.KeyAuth)
+	if kAuthErr != nil {
+		return c, kAuthErr
+	}
+	c.S3Client.Auth.AccessKey = kAuth.AccessKey
+	c.S3Client.Auth.SecretKey = kAuth.SecretKey
 
 	if c.S3Client.ObjectsPrefix == "" {
 		c.S3Client.ObjectsPrefix = "backup"
