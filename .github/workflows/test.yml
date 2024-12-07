@@ -1,0 +1,18 @@
+name: test
+
+on: [ push ]
+
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.22'
+      - name: Run tests
+        working-directory: ./encryption
+        run: go test
+      
