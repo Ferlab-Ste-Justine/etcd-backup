@@ -28,5 +28,28 @@ The utility has the following commands:
 
 ## Configuration
 
-...
+The Configuration file is a yaml file which takes the following keys hiearchy:
+
+- **etcd_client**: Parameters for etcd communication.
+  - **endpoints**: List of etcd endpoints (**ip:port** format)
+  - **connection_timeout**: Etcd connection timeout as a duration (ex: 1m)
+  - **request_timeout**: Etcd request timeout as a duration (ex: 1m)
+  - **retries**: Number of retries when an etcd operaiton fails 
+  - **auth**: Etcd authentication parameters
+    - **ca_cert**: Path to a CA certificate file the client will use to validate the server certificates of the etcd cluster.
+    - **password_auth**: Path to a yaml containing a **username** and **password** key to be used if password client authentication is employed for the etcd cluster.
+    - **client_cert**: Client certificate file, to be used if certificate client authentication is employed for the etcd cluster.
+    - **client_key**: Client private key file, to be used if certificate client authentication is employed for the etcd cluster.
+**snapshot_path**: Path where to temporarily store the transient snapshot file for the **backup** and **restore** commands. Note that this file is temporary and will always be deleted by the time the command completes.
+**encryption_key_path**: Path to the file containg the master key for encrypting and decryption backups in the **backup** and **restore** commands. You can omit it if you do not wish to encrypt your backups. Also used to specify the file that contains the new master key with the **rotate-key** command. 
+**s3_client**: Parameters for s3 communication.
+  **objects_prefix**: Prefix to put on all s3 objects. Backups will be stored in objects named `<object_prefix>-<timestamp>.dump` and encrypted encryption keys will be stored in objects named `<object_prefix>-<timestamp>.key`. The default value is **backup** if omited.
+  **endpoint**: Endpoint of the s3 store. Takes the format **ip:port**.
+  **bucket**: Bucket in the s3 store where the backups are managed.
+  **auth**: S3 Authentication parameters.
+    **ca_cert**: Path to a CA file used to authentify the S3 store server certificate. Can be omited if the S3 store server certificate has been signed by a well established CA.
+    **key_auth**: Path to a yaml authentication file containing two keys: **access_key** and **secret_key**. These are the credentials the client will present to the S3 store.
+  **region**: Region to use in the s3 store.
+  **connection_timeout**: S3 connection timeout as a duration (ex: 1m)
+  **request_timeout**: S3 request timeout as a duration (ex: 1m)
 
