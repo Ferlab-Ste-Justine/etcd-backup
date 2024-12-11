@@ -17,13 +17,14 @@ func generatePruneCmd(confPath *string) *cobra.Command {
 		Use:   "prune",
 		Short: "Prune older backups in S3",
 		Run: func(cmd *cobra.Command, args []string) {
-			conf, err := config.GetConfig(*confPath)
-			AbortOnErr(err)
+			conf, confErr := config.GetConfig(*confPath)
+			AbortOnErr("Error getting configurations: %s", confErr)
 
 			expiry, expiryErr := time.ParseDuration(maxAge)
-			AbortOnErr(expiryErr)
+			AbortOnErr("Error parsing max-age argument: %s", expiryErr)
 
-			AbortOnErr(s3.Prune(conf.S3Client, expiry, minCount))
+			pruneErr := s3.Prune(conf.S3Client, expiry, minCount)
+			AbortOnErr("Error pruning backups: %s", pruneErr)
 		},
 	}
 
