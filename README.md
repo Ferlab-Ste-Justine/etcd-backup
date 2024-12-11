@@ -2,7 +2,7 @@
 
 This is an utility to backup the state of an etcd cluster in an s3 store and restore the etcd state from a snapshot.
 
-Backups can be done remotely as it relies on the etcd snapshot api. Restores, however, should be performed from the etcd node restoring the data and additionally require the **etcdutl** binary to be present on the etcd node to unpack the downloaded snapshot into etcd's data directory.
+Backups can be done remotely as it relies on the etcd snapshot api. Restores, however, should be performed from the etcd node restoring the data. Unpacking the snapshot into etcd's data directory is also optionally supported, although it requires the **etcdutl** binary to be present on the etcd node to do the unpacking.
 
 The utility optionally supports encryption of the backups (and decryption during restores) using the official XChaCha20-Poly1305 encryption implementation from the golang crypto package. It takes a master key as an argument for the encryption/decryption and will generate an encryption key unique to each backup which it will encrypt with the master key. It is recommended to use a different master key to encrypt the backup of different etcd clusters.
 
@@ -20,6 +20,11 @@ The utility has the following commands:
     - **-t**/**--backup-timestamp**: Timestamp of the backup to restore in RFC3339 format (ex: **2024-12-06T21:22:25Z**). If omited, the lastest backup will be restored.
     - **-d**/**--data-dir**: Path of the etcd data directory on the node where the snapshot will be unpacked. This is a mandatory argument.
     - **-e**/**--etcdutl-path**: Path of the **etcdutl** binary which will be used to unpack the snapshot on the filesystem. Can be omited if **etcdutl** is already in the system's **PATH**.
+    - **-o**/**--initial-cluster-token**: **--initial-cluster-token** argument that is passed directly to the **etcdutl snapshot restore** command. Uses the default of **etcdutl** (ie, **etcd-cluster**) if not specified.
+    - **-l**/**--initial-cluster**: **--initial-cluster** argument that is passed directly to the **etcdutl snapshot restore** command. Uses the default of **etcdutl** (ie, `default=http://localhost:2380`) if not specified.
+    - **-a**/**--initial-advertise-peer-urls**: **--initial-advertise-peer-urls** argument that is passed directly to the **etcdutl snapshot restore** command. Uses the default of **etcdutl** (ie, `http://localhost:2380`) if not specified.
+    - **-n**/**--name**: **--name** argument that is passed  directly to the **etcdutl snapshot restore** command. Uses the default of **etcdutl** (ie, **default**) if not specified.
+    - **-u**/**--use-etcdutl**: Boolean flag that specifies whether or not the **etcdutl** utility will be used after downloading the snapshot from s3 to unpack the snapshot into etcd's data directory. If it is called, the downloaded snapshot will be treated as transient and deleted after the unpacking is done, else it will not.
   - **rotate-key**: Command to rotate the master key that is encrypting the backups. It takes the following arguments:
     - **-p**/**--previous-key**: Path to a file containing the previous key that was used to encrypt the backup encryption keys currently in s3. This is a mandatory argument. The file containing the key used to re-encrypt the encryption keys in the s3 store is specified in the configuration file.
   - **prune**: Command to prune aging backups. It takes the following arguments:
@@ -40,7 +45,7 @@ The Configuration file is a yaml file which takes the following keys hiearchy:
     - **password_auth**: Path to a yaml containing a **username** and **password** key to be used if password client authentication is employed for the etcd cluster.
     - **client_cert**: Client certificate file, to be used if certificate client authentication is employed for the etcd cluster.
     - **client_key**: Client private key file, to be used if certificate client authentication is employed for the etcd cluster.
-- **snapshot_path**: Path where to temporarily store the transient snapshot file for the **backup** and **restore** commands. Note that this file is temporary and will always be deleted by the time the command completes.
+- **snapshot_path**: Path where to temporarily store the transient snapshot file for the **backup** and **restore** commands. Note that this file is usually temporary and will be deleted, except for the case of a **restore** command where the call to **etcdutl** to unpack the snapshot in etcd's data directory is disabled.
 - **encryption_key_path**: Path to the file containg the master key for encrypting and decryption backups in the **backup** and **restore** commands. You can omit it if you do not wish to encrypt your backups. Also used to specify the file that contains the new master key with the **rotate-key** command. 
 - **s3_client**: Parameters for s3 communication.
   - **objects_prefix**: Prefix to put on all s3 objects. Backups will be stored in objects named `<object_prefix>-<timestamp>.dump` and encrypted encryption keys will be stored in objects named `<object_prefix>-<timestamp>.key`. The default value is **backup** if omited.
